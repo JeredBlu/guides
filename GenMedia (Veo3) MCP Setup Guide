@@ -1,1 +1,198 @@
+# Google GenMedia MCP Server Setup for Gemini CLI and Claude Desktop
+
+[Full Video Tutorial Here](https://www.youtube.com/watch?v=VIDEO_LINK)
+
+⚫⚫⚫⚪⚪ Intermediate Difficulty | ⏱️ 30-45 Minutes Setup Time
+
+This guide walks you through connecting Google's Media Generation MCP servers (Imagen, Veo, Lyria, Chirp) with Gemini CLI. Ensure you have billing set up in Google Cloud Platform (GCP), as services can quickly incur costs.
+
+## Before You Begin
+
+### Prerequisites
+
+* macOS (Windows/Linux may require adjustments)
+* Google account with billing enabled
+* Node.js ([Download here](https://nodejs.org/))
+* Go ([Download here](https://golang.org/dl/))
+* Basic terminal knowledge
+* Gemini CLI ([Install guide](https://github.com/google/gemini-cli))
+
+## Part 1: Google Cloud Platform Setup
+
+### 1. Create a Google Cloud Project
+
+* Go to [Google Cloud Console](https://console.cloud.google.com)
+* Click **New Project** and name your project (e.g., `genmedia-project`).
+* Link billing account and click **Create**.
+
+### 2. Enable Required APIs
+
+In **APIs & Services > Library**, enable:
+
+* Vertex AI API
+* Cloud Storage API
+* Cloud Resource Manager API
+
+### 3. Create Service Account
+
+* Go to **IAM & Admin > Service Accounts**
+* Click **Create Service Account** named `genmedia-mcp-server`
+* Assign roles:
+
+  * Vertex AI User
+  * Storage Object User
+  * Storage Object Creator
+* Click **Done**
+
+### 4. Download Credentials
+
+* Click the new service account
+* Go to **Keys > Add Key > Create New Key**
+* Select **JSON** and download (remember the location)
+* Rename to `genmedia-credentials.json`
+
+### 5. Create Storage Bucket
+
+* Go to **Cloud Storage > Buckets**
+* Click **Create Bucket** named `genmedia-project-bucket`
+* Location: `us-central1`
+* Storage class: Standard, Fine-grained permissions
+* Click **Create**
+
+### 6. Set Billing Alerts (Recommended)
+
+* In **Billing > Budgets & Alerts**, set a budget (e.g., \$10)
+
+## Part 2: Local Setup
+
+### 1. Verify Installations
+
+```bash
+node --version
+go version
+```
+
+### 2. Secure Credentials
+
+```bash
+mkdir -p ~/.config/gcp
+mv /path/to/genmedia-credentials.json ~/.config/gcp/genmedia-credentials.json
+chmod 600 ~/.config/gcp/genmedia-credentials.json
+echo 'export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcp/genmedia-credentials.json"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Tip:** Drag the original JSON file into terminal after typing `mv` for easy path completion.
+
+### 3. Install MCP Servers
+
+```bash
+git clone https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio.git
+cd vertex-ai-creative-studio/experiments/mcp-genmedia/mcp-genmedia-go
+echo 'export PATH="$PATH:$HOME/go/bin"' >> ~/.zshrc
+source ~/.zshrc
+./install.sh
+```
+
+Choose option **6 (Install All)**.
+
+### 4. Verify Installation
+
+```bash
+which mcp-veo-go
+echo $GOOGLE_APPLICATION_CREDENTIALS
+ls ~/.config/gcp/genmedia-credentials.json
+```
+
+## Part 3: Gemini CLI Configuration
+
+Edit `~/.gemini/settings.json`:
+
+```json
+"mcpServers": {
+  "imagen": {
+    "command": "mcp-imagen-go",
+    "env": {
+      "PROJECT_ID": "your-project-id",
+      "LOCATION": "us-central1",
+      "GENMEDIA_BUCKET": "your-bucket-name"
+    }
+  },
+  "veo": {
+    "command": "mcp-veo-go",
+    "env": {
+      "PROJECT_ID": "your-project-id",
+      "LOCATION": "us-central1",
+      "GENMEDIA_BUCKET": "your-bucket-name"
+    }
+  },
+  "lyria": {
+    "command": "mcp-lyria-go",
+    "env": {
+      "PROJECT_ID": "your-project-id",
+      "LOCATION": "us-central1",
+      "GENMEDIA_BUCKET": "your-bucket-name"
+    }
+  },
+  "chirp": {
+    "command": "mcp-chirp3-go",
+    "env": {
+      "PROJECT_ID": "your-project-id",
+      "LOCATION": "us-central1",
+      "GENMEDIA_BUCKET": "your-bucket-name"
+    }
+  }
+}
+```
+
+Replace placeholders with your Google Cloud details:
+
+* `your-project-id` (from Google Cloud)
+* `your-bucket-name` (Cloud Storage bucket name)
+
+## Part 4: Testing
+
+Launch Gemini CLI and test:
+
+```bash
+gemini
+```
+
+Use example commands like:
+
+```
+create a video with veo3 of a speaker at the UN discussing MCP servers
+```
+
+## Part 5: Claude Desktop Configuration (Optional)
+
+Edit Claude Desktop's config (`claude_desktop_config.json`):
+
+```json
+"mcpServers": {
+  "veo": {
+    "command": "/Users/your-username/go/bin/mcp-veo-go",
+    "env": {
+      "PROJECT_ID": "your-project-id",
+      "LOCATION": "us-central1",
+      "GENMEDIA_BUCKET": "your-bucket-name",
+      "GOOGLE_APPLICATION_CREDENTIALS": "/Users/your-username/.config/gcp/genmedia-credentials.json"
+    }
+  }
+}
+```
+
+Replace `your-username`, `your-project-id`, and `your-bucket-name`.
+
+## Troubleshooting
+
+* Verify PATH and environment variables
+* Ensure billing and API quotas are correctly set
+
+## Useful Links
+
+* [Gemini CLI Documentation](https://github.com/google/gemini-cli)
+* [Vertex AI MCP Setup](https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio/tree/main/experiments/mcp-genmedia)
+
+Happy generating!
 
